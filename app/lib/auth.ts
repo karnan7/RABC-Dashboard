@@ -1,22 +1,10 @@
 import "dotenv/config";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Role, User } from "../types";
 import { cookies } from "next/headers";
 import { prisma } from "./db";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "";
-
-export const hashPassword = async (password: string): Promise<string> => {
-  return bcrypt.hash(password, 12);
-};
-
-export const verifyPassword = async (
-  password: string,
-  hashedPassword: string,
-): Promise<boolean> => {
-  return bcrypt.compare(password, hashedPassword);
-};
 
 export const generateToken = (userId: string): string => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
@@ -33,13 +21,12 @@ export const getCurrentUser = async (): Promise<User | null> => {
     if (!token) return null;
     const decode = verifyToken(token);
 
-    const userFromDB = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: decode.userId },
     });
-    if (!userFromDB) return null;
+    if (!user) return null;
 
-    const { password, ...user } = userFromDB;
-    return user as User;
+    return user;
   } catch (error) {
     console.error(error);
     return null;

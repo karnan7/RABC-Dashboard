@@ -1,4 +1,5 @@
-import { generateToken, verifyPassword } from "@/app/lib/auth";
+import { generateToken } from "@/app/lib/auth";
+import { verifyPassword } from "@/app/lib/password";
 import { prisma } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -16,6 +17,8 @@ export async function POST(request: NextRequest) {
     const userFromDB = await prisma.user.findUnique({
       where: { email },
       include: { team: true },
+      // Opt back in to the hash — needed here to verify the password.
+      omit: { password: false },
     });
 
     if (!userFromDB) {

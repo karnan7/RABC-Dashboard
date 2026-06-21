@@ -1,4 +1,5 @@
-import { generateToken, hashPassword } from "@/app/lib/auth";
+import { generateToken } from "@/app/lib/auth";
+import { hashPassword } from "@/app/lib/password";
 import { prisma } from "@/app/lib/db";
 import { Role } from "@/app/types";
 import { NextRequest, NextResponse } from "next/server";

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "../lib/auth";
+import { LogoutButton } from "./_components/logout-button";
 
 // Reads the session cookie, so this section is always rendered per-request.
 export const dynamic = "force-dynamic";
@@ -28,9 +29,10 @@ export default async function DashboardLayout({
           </Link>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-[#8a8780]">{user?.name}</span>
-            <span className="rounded-full border border-[#e8b04b]/30 bg-[#e8b04b]/10 px-2.5 py-0.5 font-mono text-xs uppercase tracking-wide text-[#e8b04b]">
+            <span className="rounded-full border border-[#e8b04b]/30 bg-[#e8b04b]/10 px-4.5 py-2 font-mono text-xs uppercase tracking-wide text-[#e8b04b]">
               {user?.role}
             </span>
+            <LogoutButton />
           </div>
         </div>
       </header>

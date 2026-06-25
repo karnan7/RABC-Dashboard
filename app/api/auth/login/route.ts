@@ -3,6 +3,12 @@ import { verifyPassword } from "@/app/lib/password";
 import { prisma } from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
+// A well-formed bcrypt hash that no real password matches. When the email is
+// unknown we still run a compare against this so the response timing doesn't
+// reveal whether the account exists (it never matches → same "invalid" path).
+const DUMMY_HASH =
+  "$2b$12$/SxnLwwoLCj4ZdRWDNTSFuuxkFPakbUpL3iAkNTTxmh7227IHspZ.";
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
@@ -21,15 +27,17 @@ export async function POST(request: NextRequest) {
       omit: { password: false },
     });
 
-    if (!userFromDB) {
-      return NextResponse.json({ error: "Invalid user" }, { status: 401 });
-    }
+    // Always run a bcrypt compare — even when the user is missing — so a
+    // non-existent email and a wrong password take the same time and return
+    // the same message. This avoids leaking which emails are registered.
+    const isValidPassword = await verifyPassword(
+      password,
+      userFromDB?.password ?? DUMMY_HASH,
+    );
 
-    const isValidPassword = await verifyPassword(password, userFromDB.password);
-
-    if (!isValidPassword) {
+    if (!userFromDB || !isValidPassword) {
       return NextResponse.json(
-        { error: "Invalid Credentials" },
+        { error: "Invalid email or password" },
         { status: 401 },
       );
     }

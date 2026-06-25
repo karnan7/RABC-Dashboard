@@ -4,7 +4,12 @@ import { Role, User } from "../types";
 import { cookies } from "next/headers";
 import { prisma } from "./db";
 
-const JWT_SECRET = process.env.JWT_SECRET ?? "";
+// Fail fast at startup rather than signing/verifying tokens with an empty
+// secret (which silently surfaces as a confusing 500 deep inside a request).
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is required");
+}
 
 export const generateToken = (userId: string): string => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });

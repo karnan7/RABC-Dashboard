@@ -17,7 +17,7 @@ export interface Team {
   name: string;
   description?: string | null;
   code: string;
-  memebers: User[];
+  members: User[];
   createdAt: Date;
   updatedAt: Date;
 }

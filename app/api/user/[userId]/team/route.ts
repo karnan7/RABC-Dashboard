@@ -34,6 +34,15 @@ export async function PATCH(
       );
     }
 
+    // Only a string (assign) or null (remove) are valid. Reject anything else
+    // here so a malformed body becomes a clean 400 instead of a Prisma 500.
+    if (teamId !== null && typeof teamId !== "string") {
+      return NextResponse.json(
+        { error: "teamId must be a string or null" },
+        { status: 400 },
+      );
+    }
+
     // When assigning, the target team must exist.
     if (teamId !== null) {
       const team = await prisma.team.findUnique({ where: { id: teamId } });

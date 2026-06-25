@@ -71,6 +71,11 @@ export default async function DashboardPage() {
     members.map((m) => m.team?.id).filter((id): id is string => Boolean(id)),
   );
 
+  // `getCurrentUser()` doesn't load the team relation, but the viewer always
+  // appears in their own RBAC-scoped list — so read the team name from there.
+  const viewerTeamName =
+    members.find((m) => m.id === viewer.id)?.team?.name ?? "No team";
+
   return (
     <div className="space-y-10">
       <header>
@@ -84,7 +89,7 @@ export default async function DashboardPage() {
 
       <section className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Your role" value={viewer.role} />
-        <StatCard label="Your team" value={viewer.team?.name ?? "No team"} />
+        <StatCard label="Your team" value={viewerTeamName} />
         <StatCard
           label="Members visible"
           value={members.length}

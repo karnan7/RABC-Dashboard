@@ -25,11 +25,12 @@ export async function PATCH(
     const { userId } = await context.params;
     const { role } = await request.json();
 
-    // Prevent users from changing their own role
+    // Prevent users from changing their own role. The caller is authenticated
+    // and authorized as ADMIN — this specific action is forbidden, so 403.
     if (userId === viewer.id) {
       return NextResponse.json(
         { error: "You can't change your own role" },
-        { status: 401 },
+        { status: 403 },
       );
     }
 

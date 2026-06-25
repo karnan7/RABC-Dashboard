@@ -1,38 +1,8 @@
 import { getCurrentUser } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/db";
-import { Prisma, Role } from "@prisma/client";
+import { Role } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import type { User } from "@/app/types";
-
-/**
- * RBAC visibility rules: the set of Prisma filters that constrain which users
- * `viewer` is allowed to see. They are AND-combined by the caller, so each
- * entry can only shrink the result set — never widen what RBAC allows.
- */
-function visibilityConditions(viewer: User): Prisma.UserWhereInput[] {
-  // Team-scoped match. A viewer with no team must not match every other
-  // teamless user, so fall back to "only myself".
-  const sameTeam: Prisma.UserWhereInput = viewer.teamId
-    ? { teamId: viewer.teamId }
-    : { id: viewer.id };
-
-  switch (viewer.role) {
-    case Role.ADMIN:
-      // Admin sees everyone — no restriction.
-      return [];
-
-    case Role.MANAGER:
-      // Non-admins on the manager's team, plus any plain USER anywhere.
-      return [
-        { role: { not: Role.ADMIN } },
-        { OR: [sameTeam, { role: Role.USER }] },
-      ];
-
-    default:
-      // USER / GUEST: non-admins on their own team only.
-      return [{ role: { not: Role.ADMIN } }, sameTeam];
-  }
-}
+import { memberSelect, visibilityConditions } from "@/app/lib/rbac";
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,19 +30,7 @@ export async function GET(request: NextRequest) {
 
     const users = await prisma.user.findMany({
       where: { AND: conditions },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-        team: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      select: memberSelect,
       orderBy: { createdAt: "desc" },
     });
 

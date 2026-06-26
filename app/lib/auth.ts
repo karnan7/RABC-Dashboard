@@ -1,8 +1,13 @@
 import "dotenv/config";
 import jwt from "jsonwebtoken";
-import { Role, User } from "../types";
+import { User } from "../types";
 import { cookies } from "next/headers";
 import { prisma } from "./db";
+
+// Pure permission logic lives in its own side-effect-free module so it can be
+// unit-tested without loading env/DB. Re-exported here so existing callers can
+// keep importing it from "@/app/lib/auth".
+export { checkUserPermission } from "./permissions";
 
 // Fail fast at startup rather than signing/verifying tokens with an empty
 // secret (which silently surfaces as a confusing 500 deep inside a request).
@@ -36,17 +41,4 @@ export const getCurrentUser = async (): Promise<User | null> => {
     console.error(error);
     return null;
   }
-};
-
-export const checkUserPermission = (
-  user: User,
-  requiredRole: Role,
-): boolean => {
-  const roleHierarchy = {
-    [Role.GUEST]: 0,
-    [Role.USER]: 1,
-    [Role.MANAGER]: 2,
-    [Role.ADMIN]: 3,
-  };
-  return roleHierarchy[user.role] >= roleHierarchy[requiredRole];
 };

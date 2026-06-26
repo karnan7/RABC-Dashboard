@@ -6,25 +6,24 @@
  *
  * Heads-up: these routes are NOT uniform in their response shape, so the
  * return types are deliberately per-route:
- *   - login / register → `{ user: AuthUser }`  (AuthUser carries a `token`)
+ *   - login / register → `{ user: AuthUser }`  (the session is in an httpOnly cookie)
  *   - me               → the bare `User` object (NOT wrapped in `{ user }`)
- *   - logout           → `{ messsage: string }` (server's typo, preserved)
+ *   - logout           → `{ message: string }`
  */
 
 import { apiClient } from "@/app/lib/api-client";
 import type { User } from "@/app/types";
 
 /**
- * Shape returned by login/register: a trimmed `User` plus a `token`. It omits
+ * Shape returned by login/register: a trimmed `User`. It omits
  * `createdAt`/`updatedAt`, so it is not interchangeable with the full `User`
- * returned by `getCurrentUser()`.
+ * returned by `getCurrentUser()`. The session itself lives in an httpOnly
+ * cookie set on the response, never in this body.
  */
 export type AuthUser = Pick<
   User,
   "id" | "email" | "name" | "role" | "teamId" | "team"
-> & {
-  token: string;
-};
+>;
 
 export interface RegisterInput {
   name: string;
@@ -57,5 +56,5 @@ export function getCurrentUser() {
 
 /** POST /api/auth/logout — clears the `token` cookie server-side. */
 export function logout() {
-  return apiClient.post<{ messsage: string }>("/api/auth/logout");
+  return apiClient.post<{ message: string }>("/api/auth/logout");
 }

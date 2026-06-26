@@ -68,7 +68,6 @@ export async function POST(request: NextRequest) {
         role: user.role,
         teamId: user.teamId,
         team: user.team,
-        token: generatedToken,
       },
     });
 

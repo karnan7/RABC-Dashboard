@@ -52,7 +52,6 @@ export async function POST(request: NextRequest) {
         role: userFromDB.role,
         teamId: userFromDB.teamId,
         team: userFromDB.team,
-        token: generatedToken,
       },
     });
 

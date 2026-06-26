@@ -18,8 +18,7 @@ model User {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    // Indexes
-    @@index([email])
+    // Indexes (email is already indexed by its @unique constraint)
     @@index([role])
     @@index([teamId])
     // map

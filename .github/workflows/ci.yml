@@ -1,0 +1,71 @@
+# GitHub Actions CI — runs automatically on every push and pull request.
+#
+# WHAT THIS IS: a recipe GitHub follows on a fresh machine ("runner") in the
+# cloud. It checks out your code, installs everything, and runs the same checks
+# you run locally. If any step fails, the run goes red and the PR is flagged.
+#
+# Read it top to bottom — it's just a list of steps, like a to-do list.
+
+name: CI
+
+# WHEN to run. Here: on pushes to main, and on any pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: this workflow only needs to read the repo, nothing more.
+permissions:
+  contents: read
+
+# If you push twice quickly, cancel the older run — no point testing stale code.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Lint, typecheck, test & build
+    runs-on: ubuntu-latest # a fresh Linux machine, thrown away after the run
+
+    steps:
+      # 1. Get your code onto the runner.
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      # 2. Install Node.js. `cache: npm` reuses downloaded packages between runs
+      #    so installs are fast.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # 3. Install dependencies exactly as locked (reproducible, unlike `npm install`).
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Generate the Prisma client. Our code imports `@prisma/client`, which
+      #    only exists after this runs. No database connection is needed here.
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      # 5. The actual checks — the same scripts you run locally.
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm run test:run
+
+      # 6. Production build. It imports modules that demand these env vars at
+      #    load time (e.g. the JWT_SECRET guard in app/lib/auth.ts), so we feed
+      #    DUMMY values — the dynamic routes never actually connect to anything
+      #    at build time. A real deployment would use GitHub Secrets instead.
+      - name: Build
+        run: npm run build
+        env:
+          JWT_SECRET: ci-dummy-secret-not-used-at-runtime
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db

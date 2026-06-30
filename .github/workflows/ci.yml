@@ -49,6 +49,8 @@ jobs:
       #    only exists after this runs. No database connection is needed here.
       - name: Generate Prisma client
         run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       # 5. The actual checks — the same scripts you run locally.
       - name: Lint

@@ -46,11 +46,13 @@ jobs:
         run: npm ci
 
       # 4. Generate the Prisma client. Our code imports `@prisma/client`, which
-      #    only exists after this runs. No database connection is needed here.
+      #    only exists after this runs. No database connection is needed here,
+      #    but prisma.config.ts requires DATABASE_URL to be resolvable, so we
+      #    feed a dummy value — nothing actually connects during generation.
       - name: Generate Prisma client
         run: npx prisma generate
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
 
       # 5. The actual checks — the same scripts you run locally.
       - name: Lint
